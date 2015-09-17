@@ -7,7 +7,6 @@
 #* 
 #***********************
 #!/bin/sh
-
 function contains () {
   	local e
   	for e in "${@:2}"
