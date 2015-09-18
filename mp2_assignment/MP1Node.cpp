@@ -6,10 +6,30 @@
  **********************************/
 
 #include "MP1Node.h"
-
+#include <set>
 /*
  * Note: You can change/add any functions in MP1Node.{h,cpp}
  */
+
+
+int addrToID(Address& addr)
+{
+    return *(int*)(&addr.addr);
+}
+
+int addrToPort(Address& addr)
+{
+    return *(short*)(&addr.addr[4]);
+}
+
+Address getAddr(int id, int port)
+{
+    Address addr;
+    memcpy(&addr.addr[0], &id, sizeof(int));
+    memcpy(&addr.addr[4], &port, sizeof(short));
+    return addr;
+}
+
 
 /**
  * Overloaded Constructor of the MP1Node class
@@ -27,10 +47,14 @@ MP1Node::MP1Node(Member *member, Params *params, EmulNet *emul, Log *log, Addres
 	this->memberNode->addr = *address;
 }
 
+
+
 /**
  * Destructor of the MP1Node class
  */
 MP1Node::~MP1Node() {}
+
+
 
 /**
  * FUNCTION NAME: recvLoop
@@ -47,6 +71,8 @@ int MP1Node::recvLoop() {
     }
 }
 
+
+
 /**
  * FUNCTION NAME: enqueueWrapper
  *
@@ -56,6 +82,8 @@ int MP1Node::enqueueWrapper(void *env, char *buff, int size) {
 	Queue q;
 	return q.enqueue((queue<q_elt> *)env, (void *)buff, size);
 }
+
+
 
 /**
  * FUNCTION NAME: nodeStart
@@ -87,6 +115,8 @@ void MP1Node::nodeStart(char *servaddrstr, short servport) {
     return;
 }
 
+
+
 /**
  * FUNCTION NAME: initThisNode
  *
@@ -96,8 +126,6 @@ int MP1Node::initThisNode(Address *joinaddr) {
 	/*
 	 * This function is partially implemented and may require changes
 	 */
-	int id = *(int*)(&memberNode->addr.addr);
-	int port = *(short*)(&memberNode->addr.addr[4]);
 
 	memberNode->bFailed = false;
 	memberNode->inited = true;
@@ -111,6 +139,8 @@ int MP1Node::initThisNode(Address *joinaddr) {
 
     return 0;
 }
+
+
 
 /**
  * FUNCTION NAME: introduceSelfToGroup
@@ -136,6 +166,8 @@ int MP1Node::introduceSelfToGroup(Address *joinaddr) {
 
         // create JOINREQ message: format of data is {struct Address myaddr}
         msg->msgType = JOINREQ;
+        msg->addr = memberNode->addr;
+        msg->heartbeat = memberNode->heartbeat;
         memcpy((char *)(msg+1), &memberNode->addr.addr, sizeof(memberNode->addr.addr));
         memcpy((char *)(msg+1) + 1 + sizeof(memberNode->addr.addr), &memberNode->heartbeat, sizeof(long));
 
@@ -154,6 +186,8 @@ int MP1Node::introduceSelfToGroup(Address *joinaddr) {
 
 }
 
+
+
 /**
  * FUNCTION NAME: finishUpThisNode
  *
@@ -163,7 +197,11 @@ int MP1Node::finishUpThisNode(){
    /*
     * Your code goes here
     */
+    memberNode->memberList.clear();
+    return 0;
 }
+
+
 
 /**
  * FUNCTION NAME: nodeLoop
@@ -190,6 +228,8 @@ void MP1Node::nodeLoop() {
     return;
 }
 
+
+
 /**
  * FUNCTION NAME: checkMessages
  *
@@ -209,6 +249,121 @@ void MP1Node::checkMessages() {
     return;
 }
 
+
+
+/**
+ * FUNCTION NAME: findMemberEntry
+ *
+ * DESCRIPTION: findMemberEntry
+ */
+MemberListEntry* MP1Node::findMemberEntry(std::vector<MemberListEntry>& lst, int id) {
+    for (auto i = lst.begin(); i < lst.end(); i++) {
+        if ((*i).id == id) {
+            return &(*i);
+        }
+    }
+    return NULL;
+}
+
+
+
+/**
+ * FUNCTION NAME: updateMemberList
+ *
+ * DESCRIPTION: updateMemberList
+ */
+void MP1Node::updateMemberList(vector<MemberListEntry>& memberList) {
+    for (auto i = memberList.begin(); i != memberList.end(); i++) {
+        auto& newe = *i;
+        if (newe.timestamp < par->getcurrtime() - CFG_GOSSIP_ENTRY_EXPIRATION) {
+            continue;
+        }
+        if (newe.id == *(int*)(&memberNode->addr.addr)) {
+            continue;
+        }
+        
+        auto e = findMemberEntry(memberNode->memberList, newe.id);
+        if (!e) {
+            memberNode->memberList.push_back(newe);
+            
+            #ifdef DEBUGLOG
+            auto newe_addr = getAddr(newe.id, newe.port);
+            log->logNodeAdd(&memberNode->addr, &newe_addr);
+            #endif
+        
+        } else if (newe.heartbeat > e->heartbeat){
+            e->heartbeat = newe.heartbeat;
+            e->timestamp = par->getcurrtime();
+        }
+    }
+}
+
+
+
+/**
+ * FUNCTION NAME: onRcvJOINREQ
+ *
+ * DESCRIPTION: Message returned when message type is JOINREQ 
+ */
+void MP1Node::onRcvJOINREQ(JOINREQMsg* msg) {
+	log->logNodeAdd(&memberNode->addr, &msg->addr);
+
+	auto e = findMemberEntry(memberNode->memberList, addrToID(msg->addr));
+	if( !e ) {
+		MemberListEntry newentry(addrToID(msg->addr), addrToPort(msg->addr), msg->heartbeat, par->getcurrtime());;
+		memberNode->memberList.push_back(newentry);
+	} else {
+        #ifdef DEBUGLOG
+        log->LOG(&memberNode->addr, " duplicated!");
+        #endif
+	}
+
+	JOINRSPMsg* rsp = new JOINRSPMsg();
+	rsp->addr = memberNode->addr;
+	rsp->heartbeat = memberNode->heartbeat;
+	rsp->memberList = memberNode->memberList;
+
+	emulNet->ENsend(&memberNode->addr, &msg->addr, (char*)rsp, sizeof(JOINRSPMsg));
+}		
+
+
+
+/**
+ * FUNCTION NAME: onRcvJOINRSP
+ *
+ * DESCRIPTION: Message returned when message type is JOINRSP 
+ */
+void MP1Node::onRcvJOINRSP(JOINRSPMsg* msg) {
+	memberNode->inGroup = true;
+	onRcvHEARTBEAT(msg);
+}
+
+
+
+/**
+ * FUNCTION NAME: onRcvHEARTBEAT
+ *
+ * DESCRIPTION: Message returned when message type is HEARTBEAT 
+ */
+void MP1Node::onRcvHEARTBEAT(HEARTBEATMsg* msg) {
+
+	auto e = findMemberEntry(memberNode->memberList, addrToID(msg->addr));
+	if( !e ) {
+		MemberListEntry newentry(addrToID(msg->addr), addrToPort(msg->addr), msg->heartbeat, par->getcurrtime());;
+		memberNode->memberList.push_back(newentry);
+        #ifdef DEBUGLOG
+        auto newe_addr = getAddr(newentry.id, newentry.port);
+        log->logNodeAdd(&memberNode->addr, &newe_addr);
+        #endif
+	} else if (msg->heartbeat >= e->heartbeat) {
+		e->heartbeat = msg->heartbeat;
+		e->timestamp = par->getcurrtime();
+	}
+	updateMemberList(msg->memberList);
+}
+
+
+
 /**
  * FUNCTION NAME: recvCallBack
  *
@@ -218,7 +373,26 @@ bool MP1Node::recvCallBack(void *env, char *data, int size ) {
 	/*
 	 * Your code goes here
 	 */
+	MessageHdr* msg = (MessageHdr*) data;
+	switch (msg->msgType) {
+		case JOINREQ:
+			onRcvJOINREQ((JOINREQMsg*)msg);
+			break;
+		case JOINRSP:
+			onRcvJOINRSP((JOINRSPMsg*)msg);
+			break;
+		case HEARTBEAT:
+			onRcvHEARTBEAT((HEARTBEATMsg*)msg);
+			break;
+		default:
+			printf("unknown msg type: %d\n", msg->msgType);
+			break;
+	}
+	return true;
+
 }
+
+
 
 /**
  * FUNCTION NAME: nodeLoopOps
@@ -232,9 +406,50 @@ void MP1Node::nodeLoopOps() {
 	/*
 	 * Your code goes here
 	 */
+    
+    for (auto i = 0u; i < memberNode->memberList.size(); i++) {
+        auto& e = memberNode->memberList[i];
+        if (par->getcurrtime() - e.timestamp > CFG_GOSSIP_ENTRY_EXPIRATION) {
+            auto addr = getAddr(e.id, e.port);
+            log->LOG(&memberNode->addr, "removing %s w/ hb %d ts:%d", addr.getAddress().c_str(), e.heartbeat, e.port);
+            auto a = getAddr(e.id, e.port);
+            log->logNodeRemove(&memberNode->addr, &a);
+            memberNode->memberList.erase(memberNode->memberList.begin() + i);
+            i--;
+        }
+    }
+    
+    
+    std::set<int> gossiped_members;
+    
+    for (int i = 0; gossiped_members.size() < memberNode->memberList.size() && gossiped_members.size() < CFG_GOSSIP_B; i++) {
+        //		auto& e = memberNode->memberList[i%memberNode->memberList.size()];
+        if (gossiped_members.find(i%memberNode->memberList.size()) != gossiped_members.end()) {
+            continue;
+        }
+        if (rand()*1.0/RAND_MAX < CFG_GOSSIP_B / (par->MAX_NNB*1.0)) {
+            gossiped_members.insert(i%memberNode->memberList.size());
+        }
+    }
+    
+    for (auto i = gossiped_members.begin(); i != gossiped_members.end(); i++) {
+        auto& e = memberNode->memberList[*i];
+        Address target = getAddr(e.id, e.port);
+        HEARTBEATMsg* hb = new HEARTBEATMsg();
+        hb->addr = memberNode->addr;
+        hb->heartbeat = memberNode->heartbeat;
+        hb->memberList = memberNode->memberList;
+        #ifdef DEBUGLOG
+        log->LOG(&memberNode->addr, "sending hb [%d] to %s", hb->heartbeat, target.getAddress().c_str());
+        #endif
+        emulNet->ENsend(&memberNode->addr, &target, (char*)hb, sizeof(HEARTBEATMsg));
+    }
+    
 
     return;
 }
+
+
 
 /**
  * FUNCTION NAME: isNullAddress
@@ -244,6 +459,8 @@ void MP1Node::nodeLoopOps() {
 int MP1Node::isNullAddress(Address *addr) {
 	return (memcmp(addr->addr, NULLADDR, 6) == 0 ? 1 : 0);
 }
+
+
 
 /**
  * FUNCTION NAME: getJoinAddress
@@ -260,6 +477,8 @@ Address MP1Node::getJoinAddress() {
     return joinaddr;
 }
 
+
+
 /**
  * FUNCTION NAME: initMemberListTable
  *
@@ -268,6 +487,8 @@ Address MP1Node::getJoinAddress() {
 void MP1Node::initMemberListTable(Member *memberNode) {
 	memberNode->memberList.clear();
 }
+
+
 
 /**
  * FUNCTION NAME: printAddress
