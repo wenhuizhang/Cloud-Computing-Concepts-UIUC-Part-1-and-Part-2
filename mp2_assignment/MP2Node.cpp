@@ -3,9 +3,6 @@
  *
  * DESCRIPTION: MP2Node class definition
  *
- * WRITTEN BY: Udit Mehrotra
- *
- * NET ID: umehrot2
  **********************************/
 #include "MP2Node.h"
 
@@ -13,12 +10,12 @@
  * constructor
  */
 MP2Node::MP2Node(Member *memberNode, Params *par, EmulNet * emulNet, Log * log, Address * address) {
-	this->memberNode = memberNode;
-	this->par = par;
-	this->emulNet = emulNet;
-	this->log = log;
-	ht = new HashTable();
-	this->memberNode->addr = *address;
+    this->memberNode = memberNode;
+    this->par = par;
+    this->emulNet = emulNet;
+    this->log = log;
+    ht = new HashTable();
+    this->memberNode->addr = *address;
     this->transactionId = 0;
 }
 
@@ -26,8 +23,8 @@ MP2Node::MP2Node(Member *memberNode, Params *par, EmulNet * emulNet, Log * log, 
  * Destructor
  */
 MP2Node::~MP2Node() {
-	delete ht;
-	delete memberNode;
+    delete ht;
+    delete memberNode;
 }
 
 
@@ -75,17 +72,16 @@ bool MP2Node::hasRingChanged(vector<Node> memList)
  * 				3) Calls the Stabilization Protocol
  */
 void MP2Node::updateRing() {
-	/*
-	 * Implement this. Parts of it are already implemented
-	 */
-	vector<Node> curMemList;
-	bool change = false;
-
-	// Get the current membership list
+    /*
+     * Implement this. Parts of it are already implemented
+     */
+    vector<Node> curMemList;
+    
+    // Get the current membership list
     curMemList = getMembershipList();
-
-	// Sort the list based on the hashCode
-	sort(curMemList.begin(), curMemList.end());
+    
+    // Sort the list based on the hashCode
+    sort(curMemList.begin(), curMemList.end());
     
     // Check if the ring is empty - running for first time
     if(ring.empty())
@@ -96,13 +92,13 @@ void MP2Node::updateRing() {
         {
             ring.push_back(*it);
         }
-    
+        
         // Initialize the hasReplicasOf and haveReplicaOf vectors
         for(int loop = 0; loop < ring.size(); loop++)
         {
             if((memcmp(ring.at(loop).getAddress()->addr, &this->memberNode->addr,sizeof(Address)) == 0))
             {
-
+                
                 if(loop == 0)
                 {
                     haveReplicasOf.push_back(ring.at(ring.size()-1));
@@ -118,11 +114,11 @@ void MP2Node::updateRing() {
                     haveReplicasOf.push_back(ring.at(loop-1));
                     haveReplicasOf.push_back(ring.at(loop-2));
                 }
-            
-
+                
+                
                 hasMyReplicas.push_back(ring.at((loop+1)%ring.size()));
                 hasMyReplicas.push_back(ring.at((loop+2)%ring.size()));
-
+                
             }
             
         }
@@ -140,7 +136,7 @@ void MP2Node::updateRing() {
         
         // Run Stabilization Protocol
         stabilizationProtocol();
-    
+        
     }
     
 }
@@ -156,17 +152,17 @@ void MP2Node::updateRing() {
  * 				b) Hash code obtained by consistent hashing of the Address
  */
 vector<Node> MP2Node::getMembershipList() {
-	unsigned int i;
-	vector<Node> curMemList;
-	for ( i = 0 ; i < this->memberNode->memberList.size(); i++ ) {
-		Address addressOfThisMember;
-		int id = this->memberNode->memberList.at(i).getid();
-		short port = this->memberNode->memberList.at(i).getport();
-		memcpy(&addressOfThisMember.addr[0], &id, sizeof(int));
-		memcpy(&addressOfThisMember.addr[4], &port, sizeof(short));
-		curMemList.emplace_back(Node(addressOfThisMember));
-	}
-	return curMemList;
+    unsigned int i;
+    vector<Node> curMemList;
+    for ( i = 0 ; i < this->memberNode->memberList.size(); i++ ) {
+        Address addressOfThisMember;
+        int id = this->memberNode->memberList.at(i).getid();
+        short port = this->memberNode->memberList.at(i).getport();
+        memcpy(&addressOfThisMember.addr[0], &id, sizeof(int));
+        memcpy(&addressOfThisMember.addr[4], &port, sizeof(short));
+        curMemList.emplace_back(Node(addressOfThisMember));
+    }
+    return curMemList;
 }
 
 /**
@@ -179,9 +175,9 @@ vector<Node> MP2Node::getMembershipList() {
  * size_t position on the ring
  */
 size_t MP2Node::hashFunction(string key) {
-	std::hash<string> hashFunc;
-	size_t ret = hashFunc(key);
-	return ret%RING_SIZE;
+    std::hash<string> hashFunc;
+    size_t ret = hashFunc(key);
+    return ret%RING_SIZE;
 }
 
 
@@ -214,7 +210,7 @@ void MP2Node::setTransaction(int transId,string key,string value,MessageType typ
  * 				3) Sends a message to the replica
  */
 void MP2Node::clientCreate(string key, string value) {
-
+    
     //Find the replicas where the key has to be stored
     vector<Node> replicas = findNodes(key);
     
@@ -255,7 +251,7 @@ void MP2Node::clientRead(string key){
     
     //Find the replicas where the key is stored
     vector<Node> replicas = findNodes(key);
-
+    
     //Construct and Send READ Message to PRIMARY replica
     Message* m = new Message(transactionId, getMemberNode()->addr, READ, key);
     string msg = m->toString();
@@ -288,10 +284,10 @@ void MP2Node::clientRead(string key){
  * 				3) Sends a message to the replica
  */
 void MP2Node::clientUpdate(string key, string value){
-	
+    
     //Find the replicas where the key is stored
     vector<Node> replicas = findNodes(key);
-
+    
     //Construct and Send UPDATE Message to PRIMARY replica
     Message* m = new Message(transactionId,this->memberNode->addr,UPDATE,key,value, PRIMARY);
     string msg = m->toString();
@@ -360,8 +356,8 @@ void MP2Node::clientDelete(string key){
  * 			   	2) Return true or false based on success or failure
  */
 bool MP2Node::createKeyValue(string key, string value, ReplicaType replica) {
-
-	// Insert key, value, replicaType into the hash table
+    
+    // Insert key, value, replicaType into the hash table
     Entry* en = new Entry(value, par->getcurrtime(),replica);
     string entry = en->convertToString();
     bool isSuccess = ht->create(key,entry);
@@ -378,8 +374,8 @@ bool MP2Node::createKeyValue(string key, string value, ReplicaType replica) {
  * 			    2) Return value
  */
 string MP2Node::readKey(string key) {
-
-	// Read key from local hash table and return value;
+    
+    // Read key from local hash table and return value;
     string entry = ht->read(key);
     return entry;
 }
@@ -393,8 +389,8 @@ string MP2Node::readKey(string key) {
  * 				2) Return true or false based on success or failure
  */
 bool MP2Node::updateKeyValue(string key, string value, ReplicaType replica) {
-
-	// Update key in local hash table and return true or false
+    
+    // Update key in local hash table and return true or false
     Entry en(value, par->getcurrtime(),replica);
     string entry = en.convertToString();
     bool isSuccess = ht->update(key,entry);
@@ -410,8 +406,8 @@ bool MP2Node::updateKeyValue(string key, string value, ReplicaType replica) {
  * 				2) Return true or false based on success or failure
  */
 bool MP2Node::deletekey(string key) {
-
-	// Delete the key from the local hash table
+    
+    // Delete the key from the local hash table
     bool isSuccess = ht->deleteKey(key);
     return isSuccess;
 }
@@ -423,7 +419,7 @@ void MP2Node::handleReadReplyMessage(Message* msg)
 {
     int transId = msg->transID;
     string value = msg->value;
-
+    
     Address from_Addr(msg->fromAddr);
     
     //Check if Read was successful, by checking if the read value is non empty
@@ -444,7 +440,7 @@ void MP2Node::handleReadReplyMessage(Message* msg)
         
         free(em);
     }
-
+    
 }
 
 void MP2Node::handleUpdateMessage(Message* msg)
@@ -489,7 +485,7 @@ void MP2Node::handleReadMessages(Message* msg)
         //Handles cases when read was sent for stabilization protocol with transaction id of -100 < 0
         return;
     }
-
+    
     if(value.compare("") != 0)
     {
         // log READ success
@@ -518,20 +514,20 @@ void MP2Node::handleReadMessages(Message* msg)
  * 				2) Handles the messages according to message types
  */
 void MP2Node::checkMessages() {
-
-	char * data;
-	int size;
-
-	// dequeue all messages and handle them
-	while ( !memberNode->mp2q.empty() ) {
-		/*
-		 * Pop a message from the queue
-		 */
-		data = (char *)memberNode->mp2q.front().elt;
-		size = memberNode->mp2q.front().size;
-		memberNode->mp2q.pop();
-
-		//Construct the message received from the queue
+    
+    char * data;
+    int size;
+    
+    // dequeue all messages and handle them
+    while ( !memberNode->mp2q.empty() ) {
+        /*
+         * Pop a message from the queue
+         */
+        data = (char *)memberNode->mp2q.front().elt;
+        size = memberNode->mp2q.front().size;
+        memberNode->mp2q.pop();
+        
+        //Construct the message received from the queue
         string message(data, data + size);
         Message* msg = new Message(message);
         
@@ -544,25 +540,25 @@ void MP2Node::checkMessages() {
             int tid = msg->transID;
             
             if(tid >= 0)
+            {
+                if(isSuccess)
                 {
-                    if(isSuccess)
-                    {
-                        // log CREATE success
-                        log->logCreateSuccess(&getMemberNode()->addr, false, tid, msg->key, msg->value);
-                    }
-                    else
-                    {
-                        // log CREATE failure
-                        log->logCreateFail(&getMemberNode()->addr, false, tid, msg->key, msg->value);
-                    }
-            
-                    //Construct and send REPLY message to the coordinator
-                    Message* m = new Message(msg->transID,this->memberNode->addr,REPLY,isSuccess);
-                    string msg1 = m->toString();
-                    Address to_address(msg->fromAddr);
-                    emulNet->ENsend(&memberNode->addr, &to_address, msg1);
-                    free(m);
+                    // log CREATE success
+                    log->logCreateSuccess(&getMemberNode()->addr, false, tid, msg->key, msg->value);
                 }
+                else
+                {
+                    // log CREATE failure
+                    log->logCreateFail(&getMemberNode()->addr, false, tid, msg->key, msg->value);
+                }
+                
+                //Construct and send REPLY message to the coordinator
+                Message* m = new Message(msg->transID,this->memberNode->addr,REPLY,isSuccess);
+                string msg1 = m->toString();
+                Address to_address(msg->fromAddr);
+                emulNet->ENsend(&memberNode->addr, &to_address, msg1);
+                free(m);
+            }
         }
         else if(msg->type == REPLY)
         {
@@ -578,7 +574,7 @@ void MP2Node::checkMessages() {
                 //Increment the number of replies received for the transaction - at Coordinator
                 transactions[transId].replies++;
             }
-
+            
         }
         else if(msg->type == DELETE)
         {
@@ -590,7 +586,7 @@ void MP2Node::checkMessages() {
             
             if(transId >= 0)
             {
-            
+                
                 if(isSuccess)
                 {
                     // log DELETE success
@@ -601,7 +597,7 @@ void MP2Node::checkMessages() {
                     // log DELETE failure
                     log->logDeleteFail(&getMemberNode()->addr, false, transId, msg->key);
                 }
-            
+                
                 //Construct and send REPLY message to the coordinator
                 Message* m = new Message(msg->transID,this->memberNode->addr,REPLY,isSuccess);
                 string msg1 = m->toString();
@@ -630,67 +626,67 @@ void MP2Node::checkMessages() {
         }
         
         free(msg);
-
-	}
-
+        
+    }
+    
     map<int,transaction_info>::iterator it;
     vector<int> transactions_to_delete;
     int current_time = par->getcurrtime();
     for(it = transactions.begin(); it != transactions.end(); it++)
     {
-            if(it->second.replies < 2)
+        if(it->second.replies < 2)
+        {
+            //If Quorum is not received
+            
+            //Wait for a timeout of 5 global time before logging coordinator failure
+            if ((current_time - it->second.timestamp) >= 5)
             {
-                //If Quorum is not received
-                
-                //Wait for a timeout of 5 global time before logging coordinator failure
-                if ((current_time - it->second.timestamp) >= 5)
+                if(this->transactions[it->first].type == DELETE)
                 {
-                    if(this->transactions[it->first].type == DELETE)
-                    {
-                        // log DELETE failure
-                        log->logDeleteFail(&getMemberNode()->addr, true, it->first, it->second.key);
-                        transactions_to_delete.push_back(it->first);
-                    }
-                    else if(this->transactions[it->first].type == READ)
-                    {
-                        // log READ failure
-                        log->logReadFail(&getMemberNode()->addr, true, it->first, it->second.key);
-                        transactions_to_delete.push_back(it->first);
-                    }
-                    else if(this->transactions[it->first].type == UPDATE)
-                    {
-                        // log UPDATE failure
-                        log->logUpdateFail(&getMemberNode()->addr, true, it->first, it->second.key, it->second.value);
-                        transactions_to_delete.push_back(it->first);
-                    }
-                }
-            }
-            else
-            {
-                //If Quorum replies are received
-                
-                if(this->transactions[it->first].type == CREATE)
-                {
-                    // log CREATE success
-                    log->logCreateSuccess(&getMemberNode()->addr, true, it->first, it->second.key, it->second.value);
-                }
-                else if(this->transactions[it->first].type == DELETE)
-                {
-                    // log DELETE success
-                    log->logDeleteSuccess(&getMemberNode()->addr, true, it->first, it->second.key);
+                    // log DELETE failure
+                    log->logDeleteFail(&getMemberNode()->addr, true, it->first, it->second.key);
+                    transactions_to_delete.push_back(it->first);
                 }
                 else if(this->transactions[it->first].type == READ)
                 {
-                    // log READ success
-                    log->logReadSuccess(&getMemberNode()->addr, true, it->first, it->second.key, it->second.value);
+                    // log READ failure
+                    log->logReadFail(&getMemberNode()->addr, true, it->first, it->second.key);
+                    transactions_to_delete.push_back(it->first);
                 }
                 else if(this->transactions[it->first].type == UPDATE)
                 {
-                    // log UPDATE success
-                    log->logUpdateSuccess(&getMemberNode()->addr, true, it->first, it->second.key, it->second.value);
+                    // log UPDATE failure
+                    log->logUpdateFail(&getMemberNode()->addr, true, it->first, it->second.key, it->second.value);
+                    transactions_to_delete.push_back(it->first);
                 }
-                transactions_to_delete.push_back(it->first);
             }
+        }
+        else
+        {
+            //If Quorum replies are received
+            
+            if(this->transactions[it->first].type == CREATE)
+            {
+                // log CREATE success
+                log->logCreateSuccess(&getMemberNode()->addr, true, it->first, it->second.key, it->second.value);
+            }
+            else if(this->transactions[it->first].type == DELETE)
+            {
+                // log DELETE success
+                log->logDeleteSuccess(&getMemberNode()->addr, true, it->first, it->second.key);
+            }
+            else if(this->transactions[it->first].type == READ)
+            {
+                // log READ success
+                log->logReadSuccess(&getMemberNode()->addr, true, it->first, it->second.key, it->second.value);
+            }
+            else if(this->transactions[it->first].type == UPDATE)
+            {
+                // log UPDATE success
+                log->logUpdateSuccess(&getMemberNode()->addr, true, it->first, it->second.key, it->second.value);
+            }
+            transactions_to_delete.push_back(it->first);
+        }
     }
     
     for (int i = 0; i < transactions_to_delete.size(); i++)
@@ -700,7 +696,7 @@ void MP2Node::checkMessages() {
         transactions.erase(transactions_to_delete[i]);
         
     }
-
+    
 }
 
 /**
@@ -710,29 +706,29 @@ void MP2Node::checkMessages() {
  * 				This function is responsible for finding the replicas of a key
  */
 vector<Node> MP2Node::findNodes(string key) {
-	size_t pos = hashFunction(key);
-	vector<Node> addr_vec;
-	if (ring.size() >= 3) {
-		// if pos <= min || pos > max, the leader is the min
-		if (pos <= ring.at(0).getHashCode() || pos > ring.at(ring.size()-1).getHashCode()) {
-			addr_vec.emplace_back(ring.at(0));
-			addr_vec.emplace_back(ring.at(1));
-			addr_vec.emplace_back(ring.at(2));
-		}
-		else {
-			// go through the ring until pos <= node
-			for (int i=1; i<ring.size(); i++){
-				Node addr = ring.at(i);
-				if (pos <= addr.getHashCode()) {
-					addr_vec.emplace_back(addr);
-					addr_vec.emplace_back(ring.at((i+1)%ring.size()));
-					addr_vec.emplace_back(ring.at((i+2)%ring.size()));
-					break;
-				}
-			}
-		}
-	}
-	return addr_vec;
+    size_t pos = hashFunction(key);
+    vector<Node> addr_vec;
+    if (ring.size() >= 3) {
+        // if pos <= min || pos > max, the leader is the min
+        if (pos <= ring.at(0).getHashCode() || pos > ring.at(ring.size()-1).getHashCode()) {
+            addr_vec.emplace_back(ring.at(0));
+            addr_vec.emplace_back(ring.at(1));
+            addr_vec.emplace_back(ring.at(2));
+        }
+        else {
+            // go through the ring until pos <= node
+            for (int i=1; i<ring.size(); i++){
+                Node addr = ring.at(i);
+                if (pos <= addr.getHashCode()) {
+                    addr_vec.emplace_back(addr);
+                    addr_vec.emplace_back(ring.at((i+1)%ring.size()));
+                    addr_vec.emplace_back(ring.at((i+2)%ring.size()));
+                    break;
+                }
+            }
+        }
+    }
+    return addr_vec;
 }
 
 
@@ -743,10 +739,10 @@ vector<Node> MP2Node::findNodes(string key) {
  */
 bool MP2Node::recvLoop() {
     if ( memberNode->bFailed ) {
-    	return false;
+        return false;
     }
     else {
-    	return emulNet->ENrecv(&(memberNode->addr), this->enqueueWrapper, NULL, 1, &(memberNode->mp2q));
+        return emulNet->ENrecv(&(memberNode->addr), this->enqueueWrapper, NULL, 1, &(memberNode->mp2q));
     }
 }
 
@@ -756,8 +752,8 @@ bool MP2Node::recvLoop() {
  * DESCRIPTION: Enqueue the message from Emulnet into the queue of MP2Node
  */
 int MP2Node::enqueueWrapper(void *env, char *buff, int size) {
-	Queue q;
-	return q.enqueue((queue<q_elt> *)env, (void *)buff, size);
+    Queue q;
+    return q.enqueue((queue<q_elt> *)env, (void *)buff, size);
 }
 
 /**
@@ -770,7 +766,7 @@ int MP2Node::enqueueWrapper(void *env, char *buff, int size) {
  *				Note:- "CORRECT" replicas implies that every key is replicated in its two neighboring nodes in the ring
  */
 void MP2Node::stabilizationProtocol() {
-	
+    
     vector<Node> newHaveReplicasOf;
     vector<Node> newHasMyReplicas;
     
@@ -807,7 +803,7 @@ void MP2Node::stabilizationProtocol() {
     {
         if(memcmp(hasMyReplicas.at(loop1).getAddress()->addr, newHasMyReplicas.at(loop1).getAddress()->addr,sizeof(Address)) != 0)
         {
-
+            
             //If hasMyReplica has changed
             
             // Fetch the keys for which the node is PRIMARY as it will have to replicate them again
@@ -816,13 +812,13 @@ void MP2Node::stabilizationProtocol() {
             
             // Find out which Replica SECONDARY or TERTIARY for the node's primary key has failed
             type = loop1 == 0 ? SECONDARY : TERTIARY;
-
+            
             //Check if the new node new neighbour is there in my old hasReplicas
             bool isNeighbour = isOldNeighbour(hasMyReplicas, newHasMyReplicas.at(loop1));
             
             if(!isNeighbour)
             {
-             //If not there in old HasReplicas, this means it is a completely new neighbour and the nodes primary keys will have to be created on this replica node
+                //If not there in old HasReplicas, this means it is a completely new neighbour and the nodes primary keys will have to be created on this replica node
                 
                 //Loop through all the primary keys and send CREATE message on the new neighbor
                 for(int loop2 = 0; loop2 < primaryKeys.size(); loop2++)
@@ -831,7 +827,7 @@ void MP2Node::stabilizationProtocol() {
                     string value = ht->hashTable[key];
                     Entry e(value);
                     value = e.value;
-                
+                    
                     //Send CREATE message to the new Replica
                     Message* m = new Message(-999,this->memberNode->addr,CREATE,key,value, type);
                     string msg = m->toString();

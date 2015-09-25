@@ -30,9 +30,9 @@
  * 				4) Client side CRUD APIs
  */
 class MP2Node {
-
     
-typedef struct
+    
+    typedef struct
     {
         //Structure for storing transaction information
         
@@ -46,30 +46,30 @@ typedef struct
     }transaction_info;
     
 private:
-	
+    
     // Vector holding the next two neighbors in the ring who have my replicas
-	vector<Node> hasMyReplicas;
-	
+    vector<Node> hasMyReplicas;
+    
     // Vector holding the previous two neighbors in the ring whose replicas I have
-	vector<Node> haveReplicasOf;
-	
+    vector<Node> haveReplicasOf;
+    
     // Ring
-	vector<Node> ring;
-	
+    vector<Node> ring;
+    
     // Hash Table
-	HashTable * ht;
-	
+    HashTable * ht;
+    
     // Member representing this member
-	Member *memberNode;
-	
+    Member *memberNode;
+    
     // Params object
-	Params *par;
-	
+    Params *par;
+    
     // Object of EmulNet
-	EmulNet * emulNet;
-	
+    EmulNet * emulNet;
+    
     // Object of Log
-	Log * log;
+    Log * log;
     
     //Pending Transactions for which node is the coordinator
     map<int,transaction_info> transactions;
@@ -77,46 +77,46 @@ private:
     //Transaction id
     int transactionId;
     
-
+    
 public:
-	MP2Node(Member *memberNode, Params *par, EmulNet *emulNet, Log *log, Address *addressOfMember);
-	Member * getMemberNode() {
-		return this->memberNode;
-	}
-
-	// ring functionalities
-	void updateRing();
-	vector<Node> getMembershipList();
-	size_t hashFunction(string key);
-	void findNeighbors();
-
-	// client side CRUD APIs
-	void clientCreate(string key, string value);
-	void clientRead(string key);
-	void clientUpdate(string key, string value);
-	void clientDelete(string key);
-
-	// receive messages from Emulnet
-	bool recvLoop();
-	static int enqueueWrapper(void *env, char *buff, int size);
-
-	// handle messages from receiving queue
-	void checkMessages();
-
-	// coordinator dispatches messages to corresponding nodes
-	void dispatchMessages(Message message);
-
-	// find the addresses of nodes that are responsible for a key
-	vector<Node> findNodes(string key);
-
-	// server
-	bool createKeyValue(string key, string value, ReplicaType replica);
-	string readKey(string key);
-	bool updateKeyValue(string key, string value, ReplicaType replica);
-	bool deletekey(string key);
-
-	// stabilization protocol - handle multiple failures
-	void stabilizationProtocol();
+    MP2Node(Member *memberNode, Params *par, EmulNet *emulNet, Log *log, Address *addressOfMember);
+    Member * getMemberNode() {
+        return this->memberNode;
+    }
+    
+    // ring functionalities
+    void updateRing();
+    vector<Node> getMembershipList();
+    size_t hashFunction(string key);
+    void findNeighbors();
+    
+    // client side CRUD APIs
+    void clientCreate(string key, string value);
+    void clientRead(string key);
+    void clientUpdate(string key, string value);
+    void clientDelete(string key);
+    
+    // receive messages from Emulnet
+    bool recvLoop();
+    static int enqueueWrapper(void *env, char *buff, int size);
+    
+    // handle messages from receiving queue
+    void checkMessages();
+    
+    // coordinator dispatches messages to corresponding nodes
+    void dispatchMessages(Message message);
+    
+    // find the addresses of nodes that are responsible for a key
+    vector<Node> findNodes(string key);
+    
+    // server
+    bool createKeyValue(string key, string value, ReplicaType replica);
+    string readKey(string key);
+    bool updateKeyValue(string key, string value, ReplicaType replica);
+    bool deletekey(string key);
+    
+    // stabilization protocol - handle multiple failures
+    void stabilizationProtocol();
     
     //checks if the ring structure has changed since the last run
     bool hasRingChanged(vector<Node> memList);
@@ -141,8 +141,8 @@ public:
     
     //Checks if the node passed, is present in the nodes old Neighbours
     bool isOldNeighbour(vector<Node> nodes, Node node);
-
-	~MP2Node();
+    
+    ~MP2Node();
 };
 
 #endif /* MP2NODE_H_ */
