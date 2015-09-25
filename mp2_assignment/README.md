@@ -1,4 +1,4 @@
-Read the specification document thoroughly.
+Rad the specification document thoroughly.
 
 Create a high level design covering all scenarios / test cases before you start coding. 
 
@@ -23,7 +23,8 @@ Run the grader. Check the run procedure in KVStoreGrader.sh
  
 3. Fault-tolerance up to two failures 
    (by replicating each key three times to three successive nodes in the ring, starting from the first node at or to the clockwise of the hashed key).
-   
-4. Quorum consistency level for both reads and writes (at least two replicas).
- 
-5. Stabilization after failure (recreate three replicas after failure).
+      
+   4. Quorum consistency level for both reads and writes (at least two replicas).
+    
+   5. Stabilization after failure (recreate three replicas after failure).
+

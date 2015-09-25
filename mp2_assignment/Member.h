@@ -10,6 +10,17 @@
 #include "stdincludes.h"
 
 /**
+ * Message Types
+ */
+enum MsgTypes{
+    JOINREQ,
+    JOINREP,
+    UPDATEREQ,
+    UPDATEREP,
+    DUMMYLASTMSGTYPE
+};
+
+/**
  * CLASS NAME: q_elt
  *
  * DESCRIPTION: Entry in the queue
@@ -20,6 +31,15 @@ public:
 	int size;
 	q_elt(void *elt, int size);
 };
+
+/**
+ * STRUCT NAME: MessageHdr
+ *
+ * DESCRIPTION: Header and content of a message
+ */
+typedef struct MessageHdr {
+	enum MsgTypes msgType;
+}MessageHdr;
 
 /**
  * CLASS NAME: Address
@@ -53,6 +73,18 @@ public:
 		memset(&addr, 0, sizeof(addr));
 	}
 };
+
+/**
+ * Struct Name: en_msg
+ */
+typedef struct en_msg {
+	// Number of bytes after the class
+	int size;
+	// Source node
+	Address from;
+	// Destination node
+	Address to;
+}en_msg;
 
 /**
  * CLASS NAME: MemberListEntry

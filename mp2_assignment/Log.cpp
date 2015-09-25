@@ -114,7 +114,7 @@ void Log::LOG(Address *addr, const char * str, ...) {
  * DESCRIPTION: To Log a node add
  */
 void Log::logNodeAdd(Address *thisNode, Address *addedAddr) {
-	static char stdstring[100];
+	static char stdstring[30];
 	sprintf(stdstring, "Node %d.%d.%d.%d:%d joined at time %d", addedAddr->addr[0], addedAddr->addr[1], addedAddr->addr[2], addedAddr->addr[3], *(short *)&addedAddr->addr[4], par->getcurrtime());
     LOG(thisNode, stdstring);
 }

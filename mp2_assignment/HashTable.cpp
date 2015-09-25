@@ -141,4 +141,3 @@ void HashTable::clear() {
 unsigned long HashTable::count(string key) {
 	return (unsigned long) hashTable.count(key);
 }
-

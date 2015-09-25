@@ -7,11 +7,10 @@
 #* 
 #***********************
 #!/bin/sh
-wget https://spark-public.s3.amazonaws.com/cloudcomputing2/assignments/mp2_assignment.zip || { echo 'ERROR ... Please install wget' ; exit 1; }
-unzip mp2_assignment.zip || { echo 'ERROR ... Zip file not found' ; exit 1; }
-cd mp2_assignment
+wget https://spark-public.s3.amazonaws.com/cs425/assignments/mp2/MP2.zip || { echo 'ERROR ... Please install wget' ; exit 1; }
+unzip MP2.zip || { echo 'ERROR ... Zip file not found' ; exit 1; }
+cd MP2
 cp ../MP2Node.* .
-cp ../MP1Node.* .
 make clean > /dev/null 2>&1
 make > /dev/null 2>&1 
 case $1 in
@@ -27,5 +26,5 @@ case $1 in
 esac
 cp dbg.log ../
 cd ..
-rm -rf mp2_assignment
-rm mp2_assignment.zip
+rm -rf MP2
+rm MP2.zip

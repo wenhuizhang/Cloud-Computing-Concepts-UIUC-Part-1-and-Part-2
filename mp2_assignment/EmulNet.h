@@ -18,18 +18,6 @@
 using namespace std;
 
 /**
- * Struct Name: en_msg
- */
-typedef struct en_msg {
-	// Number of bytes after the class
-	int size;
-	// Source node
-	Address from;
-	// Destination node
-	Address to;
-}en_msg;
-
-/**
  * Class Name: EM
  */
 class EM {

@@ -233,7 +233,7 @@ void Application::mp2Run() {
 		 * CREATE TEST
 		 **************/
 		/**
-		 * TEST 1: Checks if there are RF * NUMBER_OF_INSERTS CREATE SUCCESS message are in the log
+		 * TEST 1: Checks if there are RF+1 * NUMBER_OF_INSERTS CREATE SUCCESS message are in the log
 		 *
 		 */
 		if ( par->getcurrtime() == TEST_TIME && CREATE_TEST == par->CRUDTEST ) {
@@ -245,8 +245,8 @@ void Application::mp2Run() {
 		 ***************/
 		/**
 		 * TEST 1: NUMBER_OF_INSERTS/2 Key Value pair are deleted.
-		 * 		   Check whether RF * NUMBER_OF_INSERTS/2 DELETE SUCCESS message are in the log
-		 * TEST 2: Delete a non-existent key. Check for a DELETE FAIL message in the lgo
+		 * 		   Check whether RF+1 * NUMBER_OF_INSERTS/2 DELETE SUCCESS message are in the log
+		 * TEST 2: Delete a non-existent key. Check for RF+1 DELETE FAIL messages in the lgo
 		 *
 		 */
 		else if ( par->getcurrtime() == TEST_TIME && DELETE_TEST == par->CRUDTEST ) {
@@ -281,7 +281,7 @@ void Application::mp2Run() {
 		 * TEST 4: Fail a non-replica. Check for correct value of the key
 		 * 		   being read in quorum of replicas
 		 *
-		 * TEST 5: Read a non-existent key. Check for a READ FAIL message in the log
+		 * TEST 5: Read a non-existent key. Check for RF+1 or QUORUM+1 READ FAIL messages in the log
 		 *
 		 */
 		else if ( par->getcurrtime() >= TEST_TIME && READ_TEST == par->CRUDTEST ) {
@@ -316,7 +316,7 @@ void Application::mp2Run() {
 		 * TEST 4: Fail a non-replica. Check for correct new value of the key
 		 * 		   being updated in quorum of replicas
 		 *
-		 * TEST 5: Update a non-existent key. Check for a UPDATE FAIL message in the log
+		 * TEST 5: Update a non-existent key. Check for RF+1 or QUORUM+1 UPDATE FAIL messages in the log
 		 *
 		 */
 		else if ( par->getcurrtime() >= TEST_TIME && UPDATE_TEST == par->CRUDTEST ) {
